@@ -17,16 +17,16 @@ Generate unique ID with given length
 ```go
 package main
 
-import (
-    "fmt"
-    "github.com/ilyabrin/uniq"
-)
+import "github.com/ilyabrin/uniq"
+
+const length = 10
+const maxUpCase = 6
 
 func main() {
-    generatedID := uniq.New(10,4)
-    fmt.Println("Generated ID:", generatedID)
+	println("Generated ID:", uniq.New(length, maxUpCase))
 }
 ```
+Example: https://go.dev/play/p/i6vKfk-evij
 
 ## License
 
