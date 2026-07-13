@@ -5,16 +5,6 @@ import (
 	"testing"
 )
 
-func countUppercase(s string) int {
-	n := 0
-	for _, c := range s {
-		if c >= 'A' && c <= 'Z' {
-			n++
-		}
-	}
-	return n
-}
-
 func TestGenerateDefaults(t *testing.T) {
 	got, err := Generate(20)
 	if err != nil {
@@ -48,7 +38,7 @@ func TestGenerateWithUppercase(t *testing.T) {
 			if len(got) != tt.length {
 				t.Errorf("length = %d, want %d (%q)", len(got), tt.length, got)
 			}
-			if n := countUppercase(got); n != tt.wantUpper {
+			if n := countUpper(got); n != tt.wantUpper {
 				t.Errorf("uppercase = %d, want %d (%q)", n, tt.wantUpper, got)
 			}
 		})
@@ -85,7 +75,7 @@ func TestGenerateWithAlphabet(t *testing.T) {
 
 func TestGenerateCombinedOptions(t *testing.T) {
 	got := MustGenerate(30, WithDigits(), WithUppercase(10))
-	if n := countUppercase(got); n != 10 {
+	if n := countUpper(got); n != 10 {
 		t.Errorf("uppercase = %d, want 10 (%q)", n, got)
 	}
 }

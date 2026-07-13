@@ -1,9 +1,5 @@
 package uniq
 
-import (
-	"crypto/rand"
-)
-
 // tokenAlphabet is the character set for Token: 62 characters, giving
 // ~5.95 bits of entropy per character.
 const tokenAlphabet = letters + uppercaseLetters + numbers
@@ -18,30 +14,10 @@ func Token(length int) (string, error) {
 	if length <= 0 {
 		return "", nil
 	}
-
 	result := make([]byte, length)
-	// Rejection sampling over 4 slots per byte keeps the distribution
-	// uniform: 62*4=248, so values 248-255 are re-drawn.
-	const limit = byte(len(tokenAlphabet) * 4) // 248
-	buf := make([]byte, length)
-
-	filled := 0
-	for filled < length {
-		if _, err := rand.Read(buf); err != nil {
-			return "", err
-		}
-		for _, b := range buf {
-			if b >= limit {
-				continue
-			}
-			result[filled] = tokenAlphabet[int(b)%len(tokenAlphabet)]
-			filled++
-			if filled == length {
-				break
-			}
-		}
+	if err := fillRandom(result, tokenAlphabet); err != nil {
+		return "", err
 	}
-
 	return string(result), nil
 }
 
