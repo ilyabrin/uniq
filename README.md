@@ -85,11 +85,11 @@ Playground: [go.dev/play/p/i6vKfk-evij](https://go.dev/play/p/i6vKfk-evij)
 | `Token(32)` parallel | 63 | 32 | 1 |
 | `Generate(10)` | 228 | 48 | 2 |
 | `Generate(20, WithDigits())` | 250 | 56 | 2 |
-| `Generate(20, WithUppercase(6))` | 2829 | 216 | 3 |
+| `Generate(20, WithUppercase(6))` | 719 | 216 | 3 |
 
 `Token` and `Generate` scale across cores (no shared lock); `New`
-serializes on a mutex. `WithUppercase` is the slowest path — it draws
-a crypto-random permutation for the uppercase positions.
+serializes on a mutex. `WithUppercase` costs extra — it draws the
+uppercase positions via a crypto-random partial shuffle.
 
 ## License
 

@@ -69,7 +69,7 @@ func Generate(length int, opts ...Option) (string, error) {
 		// Lowercase positions come from the alphabet as usual; then
 		// exactly numUpper distinct positions are drawn from a-z and
 		// uppercased, replacing whatever was there.
-		positions, err := randomPerm(length)
+		positions, err := randomPositions(length, numUpper)
 		if err != nil {
 			return "", err
 		}
@@ -77,7 +77,7 @@ func Generate(length int, opts ...Option) (string, error) {
 		if err := fillRandom(lower, letters); err != nil {
 			return "", err
 		}
-		for i, p := range positions[:numUpper] {
+		for i, p := range positions {
 			result[p] = uppercaseLetters[lower[i]-'a']
 		}
 	}
@@ -126,33 +126,51 @@ func fillRandom(dst []byte, alphabet string) error {
 	return nil
 }
 
-// randomPerm returns a random permutation of [0, n) built with a
-// crypto/rand-backed Fisher-Yates shuffle.
-func randomPerm(n int) ([]int, error) {
+// randomPositions returns k distinct uniformly random indexes in [0, n)
+// via a partial crypto/rand-backed Fisher-Yates shuffle: only the first
+// k swaps of the full shuffle are performed, and entropy is read in
+// batches instead of one byte per swap.
+func randomPositions(n, k int) ([]int, error) {
+	if n > 256 {
+		return nil, errors.New("uniq: length must not exceed 256 when using WithUppercase")
+	}
+	if k > n {
+		k = n
+	}
+	if k <= 0 {
+		return nil, nil
+	}
+
 	perm := make([]int, n)
 	for i := range perm {
 		perm[i] = i
 	}
-	idx := make([]byte, 1)
-	for i := n - 1; i > 0; i-- {
-		// Uniform j in [0, i] via rejection sampling over one byte;
-		// fine for n <= 256, and split reads keep it general enough
-		// for typical ID lengths.
-		bound := i + 1
-		if bound > 256 {
-			return nil, errors.New("uniq: length must not exceed 256 when using WithUppercase")
-		}
+
+	// Batched entropy: refill buf as it drains; rejected bytes just
+	// advance the cursor, so on average ~1.2 bytes are used per swap.
+	buf := make([]byte, 64)
+	pos := len(buf)
+
+	for i := 0; i < k; i++ {
+		// Uniform j in [i, n) via rejection sampling over one byte
+		// (valid because n <= 256).
+		bound := n - i
 		limit := 256 / bound * bound
 		for {
-			if _, err := rand.Read(idx); err != nil {
-				return nil, err
+			if pos == len(buf) {
+				if _, err := rand.Read(buf); err != nil {
+					return nil, err
+				}
+				pos = 0
 			}
-			if int(idx[0]) < limit {
-				j := int(idx[0]) % bound
+			b := int(buf[pos])
+			pos++
+			if b < limit {
+				j := i + b%bound
 				perm[i], perm[j] = perm[j], perm[i]
 				break
 			}
 		}
 	}
-	return perm, nil
+	return perm[:k], nil
 }
