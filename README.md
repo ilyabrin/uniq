@@ -74,7 +74,7 @@ Playground: [go.dev/play/p/i6vKfk-evij](https://go.dev/play/p/i6vKfk-evij)
 
 ## Benchmarks
 
-12th Gen Intel i5-12400F, Go 1.21, `go test -bench . -benchmem`:
+12th Gen Intel i5-12400F, Go 1.25, `go test -bench . -benchmem`:
 
 | Call | ns/op | B/op | allocs/op |
 | --- | --- | --- | --- |
