@@ -104,6 +104,29 @@ func TestGenerateNoCollisions(t *testing.T) {
 	}
 }
 
+// TestGenerateUppercasePositionDistribution guards against bias in the
+// partial shuffle: with one uppercase letter in a length-10 string, each
+// position should be hit close to 1/10 of the time.
+func TestGenerateUppercasePositionDistribution(t *testing.T) {
+	const samples = 20000
+	const length = 10
+	counts := make([]int, length)
+	for i := 0; i < samples; i++ {
+		id := MustGenerate(length, WithUppercase(1))
+		for p := 0; p < length; p++ {
+			if id[p] >= 'A' && id[p] <= 'Z' {
+				counts[p]++
+			}
+		}
+	}
+	expected := float64(samples) / length
+	for p, got := range counts {
+		if float64(got) < expected*0.85 || float64(got) > expected*1.15 {
+			t.Errorf("position %d hit %d times, expected ~%.0f (±15%%)", p, got, expected)
+		}
+	}
+}
+
 func BenchmarkGenerate10(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		MustGenerate(10)
